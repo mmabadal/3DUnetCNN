@@ -1,4 +1,10 @@
 # 3D U-Net Convolution Neural Network with Keras
+
+## Data
+Añadir links de donde coger data
+## Results
+Añadir links de donde coger results
+
 ## Background
 Originally designed after [this paper](http://lmb.informatik.uni-freiburg.de/Publications/2016/CABR16/cicek16miccai.pdf) on 
 volumetric segmentation with a 3D U-Net.
