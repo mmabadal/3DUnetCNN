@@ -18,7 +18,7 @@ def patch_wise_prediction(model, data, overlap=0, batch_size=1, permute=False):
     :param overlap:
     :return:
     """
-    patch_shape = tuple([int(dim) for dim in model.input.shape[-3:]])
+    patch_shape = tuple([int(dim) for dim in model.input_shape[-3:]])
     predictions = list()
     indices = compute_patch_indices(data.shape[-3:], patch_size=patch_shape, overlap=overlap)
     batch = list()
@@ -32,7 +32,7 @@ def patch_wise_prediction(model, data, overlap=0, batch_size=1, permute=False):
         batch = list()
         for predicted_patch in prediction:
             predictions.append(predicted_patch)
-    output_shape = [int(model.output.shape[1])] + list(data.shape[-3:])
+    output_shape = [int(model.output_shape[1])] + list(data.shape[-3:])
     return reconstruct_from_patches(predictions, patch_indices=indices, data_shape=output_shape)
 
 
@@ -44,7 +44,7 @@ def get_prediction_labels(prediction, threshold=0.5, labels=None):
         label_data[np.max(prediction[sample_number], axis=0) < threshold] = 0
         if labels:
             for value in np.unique(label_data).tolist()[1:]:
-                label_data[label_data == value] = labels[value - 1]
+                label_data[label_data == value] = labels[value - 1]  # labels
         label_arrays.append(np.array(label_data, dtype=np.uint8))
     return label_arrays
 
@@ -76,10 +76,10 @@ def prediction_to_image(prediction, affine, label_map=False, threshold=0.5, labe
         if label_map:
             label_map_data = np.zeros(prediction[0, 0].shape, np.int8)
             if labels:
-                label = labels[0]
+                label = labels[0]  # labels
             else:
                 label = 1
-            label_map_data[data > threshold] = label
+            label_map_data[data < threshold] = label
             data = label_map_data
     elif prediction.shape[1] > 1:
         if label_map:
@@ -107,8 +107,8 @@ def run_validation_case(data_index, output_dir, model, data_file, training_modal
     :param output_dir: Where to write prediction images.
     :param output_label_map: If True, will write out a single image with one or more labels. Otherwise outputs
     the (sigmoid) prediction values from the model.
-    :param threshold: If output_label_map is set to True, this threshold defines the value above which is 
-    considered a positive result and will be assigned a label.  
+    :param threshold: If output_label_map is set to True, this threshold defines the value above which is
+    considered a positive result and will be assigned a label.
     :param labels:
     :param training_modalities:
     :param data_file:
@@ -126,7 +126,7 @@ def run_validation_case(data_index, output_dir, model, data_file, training_modal
     test_truth = nib.Nifti1Image(data_file.root.truth[data_index][0], affine)
     test_truth.to_filename(os.path.join(output_dir, "truth.nii.gz"))
 
-    patch_shape = tuple([int(dim) for dim in model.input.shape[-3:]])
+    patch_shape = tuple([int(dim) for dim in model.input_shape[-3:]])
     if patch_shape == test_data.shape[-3:]:
         prediction = predict(model, test_data, permute=permute)
     else:
@@ -136,6 +136,7 @@ def run_validation_case(data_index, output_dir, model, data_file, training_modal
     if isinstance(prediction_image, list):
         for i, image in enumerate(prediction_image):
             image.to_filename(os.path.join(output_dir, "prediction_{0}.nii.gz".format(i + 1)))
+
     else:
         prediction_image.to_filename(os.path.join(output_dir, "prediction.nii.gz"))
 

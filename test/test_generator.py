@@ -188,7 +188,8 @@ class TestDataGenerator(TestCase):
                                                             permute=True)
         training_generator, validation_generator, n_training_steps, n_validation_steps = generators
 
-        _ = next(training_generator)
+        for x in training_generator:
+            break
 
         self.rm_tmp_files()
 

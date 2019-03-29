@@ -23,10 +23,7 @@ def weighted_dice_coefficient(y_true, y_pred, axis=(-3, -2, -1), smooth=0.00001)
     :param axis:
     :return:
     """
-    return K.mean(2. * (K.sum(y_true * y_pred,
-                              axis=axis) + smooth/2)/(K.sum(y_true,
-                                                            axis=axis) + K.sum(y_pred,
-                                                                               axis=axis) + smooth))
+    return K.mean(2. * (K.sum(y_true * y_pred, axis=axis) + smooth/2)/(K.sum(y_true, axis=axis) + K.sum(y_pred, axis=axis) + smooth))
 
 
 def weighted_dice_coefficient_loss(y_true, y_pred):
@@ -34,7 +31,7 @@ def weighted_dice_coefficient_loss(y_true, y_pred):
 
 
 def label_wise_dice_coefficient(y_true, y_pred, label_index):
-    return dice_coefficient(y_true[:, label_index], y_pred[:, label_index])
+    return weighted_dice_coefficient(y_true[:, label_index], y_pred[:, label_index])
 
 
 def get_label_dice_coefficient_function(label_index):

@@ -1,5 +1,4 @@
 # 3D U-Net Convolution Neural Network with Keras
-![Tumor Segmentation Example](doc/tumor_segmentation_illusatration.gif)
 ## Background
 Originally designed after [this paper](http://lmb.informatik.uni-freiburg.de/Publications/2016/CABR16/cicek16miccai.pdf) on 
 volumetric segmentation with a 3D U-Net.
@@ -9,13 +8,10 @@ be easily modified to be used in other 3D applications.
 
 ## Tutorial using BRATS Data
 ### Training
-1. Download the BRATS 2018 data by following the steps outlined on the [BRATS 2018 competition page](https://www.med.upenn.edu/sbia/brats2018/registration.html).
-Place the unzipped folders in the
+1. Download the BRATS 2017 [GBM](https://app.box.com/s/926eijrcz4qudona5vkz4z5o9qfm772d) and 
+[LGG](https://app.box.com/s/ssfkb6u8fg3dmal0v7ni0ckbqntsc8fy) data. Place the unzipped folders in the 
 ```brats/data/original``` folder.
-(You can also get the older versions of the dataset without signing up:
-[LGG](https://app.box.com/shared/static/x75fzof83mmomea2yy9kshzj3tr9zni3.zip)
-[GBM](https://app.box.com/shared/static/l5zoa0bjp1pigpgcgakup83pzadm6wxs.zip))
-2. Install Python 3 and dependencies: 
+2. Install dependencies: 
 ```
 nibabel,
 keras,
@@ -24,7 +20,7 @@ nilearn,
 SimpleITK,
 nipype
 ```
-(nipype is required for preprocessing only) 
+(the last two are for preprocessing only)
 
 3. Install [ANTs N4BiasFieldCorrection](https://github.com/stnava/ANTs/releases) and add the location of the ANTs 
 binaries to the PATH environmental variable.
@@ -117,15 +113,8 @@ read in your data rather than the preprocessed BRATS data that they are currentl
 ## Pre-trained Models
 The following Keras models were trained on the BRATS 2017 data:
 * Isensee et al. 2017: 
-[model](https://www.dropbox.com/s/tgr0chjbj5oz2f7/isensee_2017_model.h5?dl=1)
-([weights only](https://www.dropbox.com/s/0hp9p1e8db92fq8/isensee_2017_weights.h5?dl=1))
+[model](https://univnebrmedcntr-my.sharepoint.com/:u:/g/personal/david_ellis_unmc_edu/EfSLuSnktwZLs2kB84S8Y6oBRCOk4WT38UxeE9KYka2Gjg)
+([weights only](https://univnebrmedcntr-my.sharepoint.com/:u:/g/personal/david_ellis_unmc_edu/EV8SBkKY67xEkk-1o1wiuG8BO-mBxKmd2Pnegvf6St8-DA?e=tRcO71))
 * Original U-Net: 
-[model](https://www.dropbox.com/s/m99rqxunx0kmzn7/tumor_segmentation_model.h5?dl=1)
-([weights only](https://www.dropbox.com/s/p9g3j9zm9btp8n0/tumor_segmentation_weights.h5?dl=1))
-
-## Citations
-GBM Data Citation:
- * Spyridon Bakas, Hamed Akbari, Aristeidis Sotiras, Michel Bilello, Martin Rozycki, Justin Kirby, John Freymann, Keyvan Farahani, and Christos Davatzikos. (2017) Segmentation Labels and Radiomic Features for the Pre-operative Scans of the TCGA-GBM collection. The Cancer Imaging Archive. https://doi.org/10.7937/K9/TCIA.2017.KLXWJJ1Q
-
-LGG Data Citation:
- * Spyridon Bakas, Hamed Akbari, Aristeidis Sotiras, Michel Bilello, Martin Rozycki, Justin Kirby, John Freymann, Keyvan Farahani, and Christos Davatzikos. (2017) Segmentation Labels and Radiomic Features for the Pre-operative Scans of the TCGA-LGG collection. The Cancer Imaging Archive. https://doi.org/10.7937/K9/TCIA.2017.GJQ7R0EF
+[model](https://univnebrmedcntr-my.sharepoint.com/:u:/g/personal/david_ellis_unmc_edu/EUKI2FjEF4FMttJ9q7bQ5IIBEYj7MCJ1O1PF-uTVIV6-YA?e=d2yrEc)
+([weights only](https://univnebrmedcntr-my.sharepoint.com/:u:/g/personal/david_ellis_unmc_edu/ESHW544cGtNFlFBKqCY8qHkB79EMRENAyqgQXGIMVMykCQ?e=QLJl5d))
