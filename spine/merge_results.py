@@ -12,7 +12,7 @@ from skimage.measure import regionprops
 import matplotlib
 
 '''
-script to evaluate tmerge spine and dendrite results.
+script to merge spine and dendrite results.
 
 inputs:
 
@@ -30,7 +30,7 @@ execution example:
 
 def main():
 
-    '''
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_spine', help='path to the spine detection folder.')
     parser.add_argument('--path_dendrite', help='path to the dendrite detection folder.')
@@ -40,11 +40,7 @@ def main():
     path_spine = parsed_args.path_spine
     path_dendrite = parsed_args.path_dendrite
     path_out =  parsed_args.path_out
-    '''
 
-    path_spine = "results/spines/128x128x64_da_medium_300_wdl_sigmoid/"
-    path_dendrite = "results/dendrite/128x128x64_da_medium_300_wdl_sigmoid/"
-    path_out ="results/merged/128x128x64_da_medium_300_wdl_sigmoid/"
 
     path_pred_spine = os.path.join(path_spine, "prediction")
     path_pred_dendrite = os.path.join(path_dendrite, "prediction")
