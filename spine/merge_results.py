@@ -54,7 +54,7 @@ def main():
         print("evaluating case" + str(val_case))
 
         # load spine prediction files
-        p_spine = os.path.join(path_pred_spine, case_folder, "prediction.nii.gz")
+        p_spine = os.path.join(path_pred_spine, case_folder, "prediction_croped_150_45000.nii.gz")
         nii_spine = nib.load(p_spine)
         spine = nii_spine.get_data()
 
@@ -75,7 +75,7 @@ def main():
 
         # Save merged
         nii_merged = nib.Nifti1Image(merged, affine=np.eye(4, 4))
-        nib.save(nii_merged, os.path.join(path_pred_out, case_folder, "prediction.nii.gz"))
+        nib.save(nii_merged, os.path.join(path_pred_out, case_folder, "prediction_croped_150_45000.nii.gz"))
 
 if __name__ == "__main__":
     main()

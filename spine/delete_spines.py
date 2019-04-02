@@ -47,6 +47,7 @@ def main():
 
     for case_folder in dir:  # for each case
 
+        print("deleting spines from case: " + case_folder)
         # load prediction files
 
         prediction_file = os.path.join(path_pred, case_folder, "prediction.nii.gz")
@@ -54,34 +55,31 @@ def main():
         prediction = prediction_nii.get_data()
 
         # adapt prediction
-
         sp_pred = np.where(prediction == [0])
         bg_pred = np.where(prediction == [-1])
-        prediction[sp_pred] = 255
-        prediction[bg_pred] = 0
+        prediction_int = np.empty_like(prediction, dtype=np.uint8)
 
+        prediction_int[sp_pred] = 255
+        prediction_int[bg_pred] = 0
 
         # get prediction labels and spines
-        label_prediction, num_labels_prediction = label(prediction)
+        label_prediction, num_labels_prediction = label(prediction_int)
         props_pred = regionprops(label_prediction)
-
 
         # preprocess prediction spines
         for spinePred in range(num_labels_prediction):  # for each spine
             size = props_pred[spinePred].area  # get size
             if size <= s_min or size >= s_max:  # if outside thresholds
-                prediction[props_pred[spinePred].coords[:, 0], props_pred[spinePred].coords[:, 1], props_pred[spinePred].coords[:, 2]] = 0  # delete spine
+                prediction_int[props_pred[spinePred].coords[:, 0], props_pred[spinePred].coords[:, 1], props_pred[spinePred].coords[:, 2]] = 0  # delete spine
 
-        sp_pred = np.where(prediction == [255])
-        bg_pred = np.where(prediction == [0])
+        sp_pred = np.where(prediction_int == [255])
+        bg_pred = np.where(prediction_int == [0])
         prediction[sp_pred] = 0
         prediction[bg_pred] = -1
 
-
         # Save new spine.nii
         prediction_nii = nib.Nifti1Image(prediction, affine=np.eye(4, 4))
-        nib.save(prediction_nii, os.path.join(path_pred, case_folder, "spine_croped_" + str(s_min) + "_" + str(s_max)  + ".nii.gz"))
-
+        nib.save(prediction_nii, os.path.join(path_pred, case_folder, "prediction_croped_" + str(s_min) + "_" + str(s_max)  + ".nii.gz"))
 
 
 if __name__ == "__main__":

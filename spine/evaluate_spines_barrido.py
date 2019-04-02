@@ -146,13 +146,13 @@ def main():
                     coincide_list_GT[ind] = 0
                     coincide_list_Pred[ind] = 0
 
-                # get maximum gt % and the correspondent pred %
-                max_coinc_GT = max(coincide_list_GT)
-                max_index = coincide_list_GT.index(max_coinc_GT)
-                coinc_Pred = coincide_list_Pred[max_index]
+                # get maximum mean score
+                coincide_list_mean = [(x + y) / 2 for x, y in zip(coincide_list_GT, coincide_list_Pred)]  # scores mean
+                max_coinc = max(coincide_list_mean)  # max mean score
+                max_index = coincide_list_mean.index(max_coinc)  # max mean score index
 
                 # check if spine is detected
-                if max_coinc_GT > coinc_thr and coinc_Pred > coinc_thr:  # if both % > threshold
+                if max_coinc > coinc_thr:  # if max_coinc is > than coinc_thr
                     tp_case = tp_case + 1  # tp + 1
                     used_list.append(max_index)  # spine detected
                 else:

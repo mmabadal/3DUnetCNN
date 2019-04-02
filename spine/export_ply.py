@@ -15,9 +15,9 @@ outputs:
  - ply file
 
 execution example:
- - python3 export_ply.py --path_run "results/spines_dendrite/64x64x64_da_medium_300_wdl_sigmoid/" --rescale 0 --name "prediction"
 
- - python3 export_ply.py --path_run "results/spines_dendrite/64x64x64_da_medium_300_wdl_sigmoid/" --rescale 0 --name "threshold"
+ - python3 export_ply.py --path_run "results/merged/x/" --rescale 1 --name_in "prediction" --class2exp 0
+
 '''
 
 
@@ -26,14 +26,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_run', help='path to the run folder.')
     parser.add_argument('--rescale', default=0, help='1 to rescale.')
-    parser.add_argument('--name', help='working file name')
+    parser.add_argument('--name_in', help='working file name')
+    parser.add_argument('--class2exp', default=0, help='0 to extract all classes, 1 for only dendrite, 2 for only spine')
     parsed_args = parser.parse_args(sys.argv[1:])
 
     path_run = parsed_args.path_run  # get prediction folder
     rescale = parsed_args.rescale  # get rescale option
-    name = parsed_args.name  # get type
+    name_in = parsed_args.name_in  # get type
+    class2exp = int(parsed_args.class2exp)  # get rescale option
 
-    file = name + ".nii.gz"
+
+    file = name_in + ".nii.gz"
 
     path_pred = os.path.join(path_run, "prediction")
 
@@ -46,7 +49,15 @@ def main():
         prediction = nib.load(file_path)
         prediction = prediction.get_data()
 
-        pred = np.where(prediction != [0])  # get detected index
+        if class2exp == 0:
+            pred = np.where(prediction != [0])  # get detected index
+            name_out = "all"
+        elif class2exp == 1:
+            pred = np.where(prediction == [150])  # get detected index
+            name_out = "dendrite"
+        elif class2exp == 2:
+            pred = np.where(prediction == [255])  # get detected index
+            name_out = "spine"
 
         # get detected coords
 
@@ -70,7 +81,7 @@ def main():
 
         # create ply
         out_path = os.path.join(path_pred, case_folder)
-        f = open(out_path + "/" + name + ".ply", 'w')
+        f = open(out_path + "/" + name_in + "_" + name_out + ".ply", 'w')
 
         f.write("ply" + '\n')
         f.write("format ascii 1.0" + '\n')
