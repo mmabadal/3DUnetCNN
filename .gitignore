@@ -16,5 +16,5 @@ data.hdf5
 test_dir
 *.hdr
 *.img
-brats/results
-brats/data
+spine/results
+spine/data
