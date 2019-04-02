@@ -48,10 +48,7 @@ def main():
     path_pred = os.path.join(path_run, "prediction")
 
     # initialization
-    header = ['FP', 'FN', 'TP', 'Sens.', 'Precision']
-    FP_global = list()
-    FN_global = list()
-    TP_global = list()
+    header = ['Sens.', 'Precision']
     SENS_global = list()
     PREC_global = list()
     threshold_global = list()
@@ -63,6 +60,9 @@ def main():
         FP_thr = np.array([])
         FN_thr = np.array([])
         TP_thr = np.array([])
+        SENS_thr = np.array([])
+        PREC_thr = np.array([])
+
 
         dir = listdir(path_pred)
 
@@ -160,28 +160,29 @@ def main():
 
             fp_case = num_labels_prediction - tp_case  # get fp as the difference between detected spines and tp
 
+
+            s_case = tp_case / (tp_case + fn_case)
+            p_case = tp_case / (tp_case + fp_case)
+
             # save case metrics
             FP_thr = np.append(FP_thr, fp_case)
             FN_thr = np.append(FN_thr, fn_case)
             TP_thr = np.append(TP_thr, tp_case)
+            SENS_thr = np.append(SENS_thr, s_case)
+            PREC_thr = np.append(PREC_thr, p_case)
 
         # calculate and save threshold metrics
-        FP_sum = np.sum(FP_thr)
-        FN_sum = np.sum(FN_thr)
-        TP_sum = np.sum(TP_thr)
 
-        SENS_thr = TP_sum / (TP_sum + FN_sum)
-        PREC_thr = TP_sum / (TP_sum + FP_sum)
+        SENS_thr_mean = np.mean(SENS_thr)
+        PREC_thr_mean = np.mean(PREC_thr)
 
-        FP_global.append(FP_sum)
-        FN_global.append(FN_sum)
-        TP_global.append(TP_sum)
-        SENS_global.append(SENS_thr)
-        PREC_global.append(PREC_thr)
+
+        SENS_global.append(SENS_thr_mean)
+        PREC_global.append(PREC_thr_mean)
         threshold_global.append(coinc_thr)
 
     # save spine results on csv
-    spine_csv = ({header[0]: FP_global, header[1]: FN_global, header[2]: TP_global, header[3]: SENS_global, header[4]: PREC_global})
+    spine_csv = ({header[0]: SENS_global, header[1]: PREC_global})
     df = pd.DataFrame.from_records(spine_csv, index=threshold_global)
     df.to_csv(path_run + "/spine_scores.csv")
 
