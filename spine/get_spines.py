@@ -1,70 +1,55 @@
-import matplotlib.pyplot as plt
-from matplotlib import pyplot as plt
 from scipy.ndimage import label
 from skimage.measure import regionprops
 import numpy as np
 import nibabel as nib
 import os
-import glob
 import argparse
 import sys
 from os import listdir, path
-import matplotlib
 
 '''
-script to obtain the spines from ground truth and prediction
+script to obtain spines from ground truth and grayscale 
 inputs:
- - ground truth and prediction of a case
+ - ground truth and grayscale of a case| path to save the results | x,y and z for the wanted bounding box
 outputs:
- - GT and prediction of all spines from the case
+ - ground truth and grayscale of each spine from the case 
 execution example:
- - python3 get_spines.py --path_run "results/128x128x64_da_medium_300_wdl_sigmoid"
+ - python3 get_spines.py --path_data "/disk/3d_unet/data/spine_nii" --path_out "/disk/3d_unet/data/spine_nii_output" --x 60 --y 60 --z 20
 '''
 
 def main():
 
-    '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path_run', help='path to the run folder.')
+    parser.add_argument('--path_data', help='path to the data folder.')
+    parser.add_argument('--path_out', help='path to export the output case folders.')
+    parser.add_argument('--x', default="60", help='x size for resulting BB')
+    parser.add_argument('--y', default="60", help='y size for resulting BB')
+    parser.add_argument('--z', default="60", help='z size for resulting BB')
+
     parsed_args = parser.parse_args(sys.argv[1:])
+    path_data = parsed_args.path_data  # get path of the GT and grayscale
+    path_out = parsed_args.path_out
+    x_size= int(parsed_args.x) 
+    y_size = int(parsed_args.y) 
+    z_size = int(parsed_args.z) 
+  
+    black_slice = np.zeros((x_size, y_size), dtype=np.uint8)  # aux black slice
 
-    path_run = parsed_args.path_run  # get path of the predictions
-    '''
-
-    path_run = "good/spine_nii"
-
+    if not path.exists(path_out):
+        os.mkdir(path_out)
     
-    black_slice = np.zeros((60, 60), dtype=np.uint8)  # aux black slice
-    
-    x_max = 60 #Max x_size for the desired bounding box
-    y_max = 60 #Max y_size for the desired bounding box
-    z_stack = 20 #Max z_size for the desired bounding box
-
-
-
-    #path_pred = os.path.join(path_run, "prediction")
-    path_pred = os.path.join(path_run)
-
-    dir = listdir(path_pred)
-
-    path_pred_spine = os.path.abspath(os.path.join(path_run,"prediction_spine"))
-    if path.exists(path_pred_spine) != True:
-        os.mkdir(path_pred_spine)
+    dir = listdir(path_data)
 
     for case_folder in dir:
 
         print("Case: " + case_folder)
 
-        case_folder_spine = os.path.abspath(os.path.join(path_pred_spine,case_folder))
-        if path.exists(case_folder_spine) != True:
-            os.mkdir(case_folder_spine)
-
         # load gt and spine files
-        truth_file = os.path.join(path_pred, case_folder, "truth.nii.gz")
+        truth_file = os.path.join(path_data, case_folder, "truth.nii.gz")
         truth_image = nib.load(truth_file)
         truth = truth_image.get_data()
 
-        spines_file = os.path.join(path_pred, case_folder, "spine.nii.gz")
+        spines_file = os.path.join(path_data, case_folder, "spine.nii.gz")
         spines_image = nib.load(spines_file)
         spines = spines_image.get_data()
 
@@ -77,50 +62,51 @@ def main():
         # get the x,y,z coordinates from the bounding box related to each spine
         for spine in range(num_labels_truth):
             spine_bb = props_truth[spine].bbox
-            spine_x=spine_bb[3]-spine_bb[0]
-            spine_y=spine_bb[4]-spine_bb[1]
-            spine_z=spine_bb[5]-spine_bb[2]
+            spine_bb_x=spine_bb[3]-spine_bb[0]
+            spine_bb_y=spine_bb[4]-spine_bb[1]
+            spine_bb_z=spine_bb[5]-spine_bb[2]
 
-            if (spine_x<=60 and spine_y<=60 and spine_z<=20): 
-                spine_folder = os.path.abspath(os.path.join(case_folder_spine,"spine_"+str(spine+1)))
-                if path.exists(spine_folder) != True:
-                    os.mkdir(spine_folder)
+            if (spine_bb_x<=x_size and spine_bb_y<=y_size and spine_bb_z<=z_size): 
+                
+                case_folder_spine = os.path.join(path_out,case_folder+"_spine"+str(spine+1))
+                if not path.exists(case_folder_spine):
+                    os.mkdir(case_folder_spine)
                 
                 #Obtain BB from GT and fill to get the desired size
                 bb = truth[spine_bb[0]:spine_bb[3],spine_bb[1]:spine_bb[4],spine_bb[2]:spine_bb[5]]
-                final_bb = np.empty([x_max,y_max,bb.shape[2]], dtype=np.uint8)
+                final_bb = np.empty([x_size,y_size,bb.shape[2]], dtype=np.uint8)
                 
                 for ind in range(bb.shape[2]):
-                    b_s = np.zeros((60, 60), dtype=np.uint8)  # aux black slice
+                    b_s = np.zeros((x_size, y_size), dtype=np.uint8)  # aux black slice
                     s = bb[:,:,ind]
-                    b_s[0:spine_x,0:spine_y] = s
+                    b_s[0:spine_bb_x,0:spine_bb_y] = s
                     final_bb[:,:,ind] = b_s
 
                 indx = final_bb.shape[2]
-                while indx != z_stack:
+                while indx != z_size:
                     final_bb = np.dstack((final_bb, black_slice))
                     indx += 1
 
                 sp = nib.Nifti1Image(final_bb, affine=np.eye(4, 4))
-                nib.save(sp, os.path.join(spine_folder, "truth.nii.gz"))
+                nib.save(sp, os.path.join(case_folder_spine, "truth.nii.gz"))
 
                 #Obtain BB from prediction and fill 'till the desired size
                 bb = spines[spine_bb[0]:spine_bb[3],spine_bb[1]:spine_bb[4],spine_bb[2]:spine_bb[5]]
-                final_bb = np.empty([x_max,y_max,bb.shape[2]], dtype=np.uint16)
+                final_bb = np.empty([x_size,y_size,bb.shape[2]], dtype=np.uint16)
 
                 for ind in range(bb.shape[2]):
-                    b_s = np.zeros((60, 60), dtype=np.uint16)  # aux black slice
-                    s = bb[:,:,ind]
-                    b_s[0:spine_x,0:spine_y] = s
+                    b_s = np.zeros((x_size, y_size), dtype=np.uint16)  # aux black slice
+                    slice_bb = bb[:,:,ind]
+                    b_s[0:spine_bb_x,0:spine_bb_y] = slice_bb
                     final_bb[:,:,ind] = b_s
 
                 indx = final_bb.shape[2]
-                while indx != z_stack:
+                while indx != z_size:
                     final_bb = np.dstack((final_bb, black_slice))
                     indx += 1
 
                 sp = nib.Nifti1Image(final_bb, affine=np.eye(4, 4))
-                nib.save(sp, os.path.join(spine_folder, "spine.nii.gz"))
+                nib.save(sp, os.path.join(case_folder_spine, "spine.nii.gz"))
 
 
 if __name__ == "__main__":

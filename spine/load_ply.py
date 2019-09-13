@@ -33,7 +33,7 @@ def main():
     name = parsed_args.name  # get file name
 
     file = name + ".ply"
-    path_pred = os.path.join(path_run, "prediction")
+    path_pred = os.path.join(path, path_run, "prediction")
     dir = listdir(path_pred)
 
     for case_folder in dir:  # for each case

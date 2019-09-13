@@ -51,7 +51,7 @@ def main():
                          training_modalities=config["training_modalities"],
                          labels=config["labels"],
                          hdf5_file=config["data_file"],
-                         output_label_map=True,
+                         output_label_map=False,
                          output_dir=path_pred)
 
     '''the network outputs the nii stacks in a different resolution than the originals introduced, in order to make
