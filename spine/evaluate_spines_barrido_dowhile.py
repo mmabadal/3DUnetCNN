@@ -29,6 +29,56 @@ execution example:
 '''
 
 
+def get_cmatrix(SCORES, thr):
+
+    n_gt = len(SCORES)
+    n_pred = len(SCORES[0])
+
+    eval_list = list(range(n_gt))
+    eval_aux = list()
+    pairs = np.full([2,n_gt], -1)
+    # lista/matrix de parejas
+
+    while eval_list:
+        for i in eval_list:
+            ok = False
+            gt_scores = SCORES[i]
+            max_score = max(gt_scores)
+            while ok == False:
+                if max_score > thr:
+                    max_index = gt_scores.index(max_score)
+                    if max_index not in pairs[0,:]:
+                        pairs[0,i] = max_index
+                        pairs[1,i] = max_score
+                        ok = True
+                    else:
+                        a = np.where(pairs[0,:] == max_index)[0][0]
+                        if pairs[1, a] < max_score:
+                            pairs[0, i] = max_index
+                            pairs[1, i] = max_score
+                            pairs[0, a] = -1
+                            pairs[1, a] = -1
+                            eval_aux.append(a)
+                            ok = True
+                        if pairs[1, a] > max_score:
+                            gt_scores[max_index] = 0
+                            max_score = max(gt_scores)
+                        else:
+                            ok = True
+                else:
+                    ok = True
+
+        eval_list = eval_aux
+        eval_aux = list()
+
+    used_list = list(pairs[0, np.where(pairs[0, :] >= 0)[0]])
+    tp = len(used_list)
+    fp = n_pred - tp
+    fn = n_gt - tp
+
+    return tp, fp, fn, used_list
+
+
 def main():
 
 
@@ -84,10 +134,7 @@ def main():
 
             print("treshold - " + str(coinc_thr) + " - case - " + str(idx + 1) + "/" + str(len(dir)) + " - " + case_folder)
 
-            # init
-            tp_case = 0
-            fn_case = 0
-            used_list = list()  # already detected spines
+            SCORES = list()
 
             # load gt and prediction files
             truth_file = os.path.join(path_pred, case_folder, "truth.nii.gz")
@@ -173,46 +220,19 @@ def main():
 
                 if eval == "nomean":
 
-                    # delete % from positions of already detected spines
-                    for ind in used_list:
-                        coincide_list_GT[ind] = 0
-                        coincide_list_Pred[ind] = 0
-
                     for i in range(len(coincide_list_GT)):
                         if coincide_list_GT[i] < coinc_thr or coincide_list_Pred[i] < coinc_thr:
                             coincide_list_GT[i] = 0
                             coincide_list_Pred[i] = 0
-
                     # get maximum mean score
-                    coincide_list_mean = [(x + y) / 2 for x, y in zip(coincide_list_GT, coincide_list_Pred)]  # scores mean
-
-                    # if coincide_list_mean:
-                    max_coinc = max(coincide_list_mean)  # max mean score
-                    if max_coinc > coinc_thr:
-                        max_index = coincide_list_mean.index(max_coinc)  # max mean score index
-                        tp_case = tp_case + 1  # tp + 1
-                        used_list.append(max_index)  # spine detected
-                    else:
-                        fn_case = fn_case + 1  # if not, fn + 1
+                    coincide_list_mean = [(x + y) / 2 for x, y in
+                                          zip(coincide_list_GT, coincide_list_Pred)]  # scores mean
+                    SCORES.append(coincide_list_mean)
 
                 if eval == "iou":
+                    SCORES.append(IoU_list)
 
-                    # delete % from positions of already detected spines
-                    for ind in used_list:
-                        IoU_list[ind] = 0
-
-                    # get maximum mean score
-                    max_IoU = max(IoU_list)  # max mean score
-                    max_index = IoU_list.index(max_IoU)  # max mean score index
-
-                    # check if spine is detected
-                    if max_IoU > coinc_thr:  # if max_coinc is > than coinc_thr
-                        tp_case = tp_case + 1  # tp + 1
-                        used_list.append(max_index)  # spine detected
-                    else:
-                        fn_case = fn_case + 1  # if not, fn + 1
-
-            fp_case = num_labels_prediction - tp_case  # get fp as the difference between detected spines and tp
+            tp_case, fp_case, fn_case, used_list = get_cmatrix(SCORES, coinc_thr)
 
             prec_case = tp_case/(tp_case+fp_case)
             sens_case = tp_case/(tp_case+fn_case)

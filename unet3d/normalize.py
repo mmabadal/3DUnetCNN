@@ -82,7 +82,7 @@ def normalize_data_storage(data_storage):
     mean = np.asarray(means).mean(axis=0)
     std = np.asarray(stds).mean(axis=0)
     for index in range(data_storage.shape[0]):
-        data_storage[index] = normalize_data(data_storage[index], mean, std)  # COMMENT O ABOVE
+        data_storage[index] = normalize_data(data_storage[index], mean, std)  # COMMENT OR ABOVE
     return data_storage
 
 

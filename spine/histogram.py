@@ -18,14 +18,15 @@ inputs:
 outputs:
  - histogram of spine size
 execution example:
- - python3 histogram.py --path_run "results/spines_dendrite/128x128x32_wloss_300ep" --name "prediction"
+ - python3 histogram.py --path_run "../data/good/spine_nii_extended/" --name "truth"
+
 '''
 
 def main():
 
    parser = argparse.ArgumentParser()
    parser.add_argument('--path_run', help='path to the run folder.')
-   parser.add_argument('--name', default="prediction", help='working file name')
+   parser.add_argument('--name', default="truth", help='working file name')
 
    parsed_args = parser.parse_args(sys.argv[1:])
     
@@ -98,7 +99,7 @@ def main():
 
    plt.subplot(4, 1, 4)
    '''
-   plt.hist(size, 300, [0, 500])  # hist(data,bins,range)
+   plt.hist(size, 300, [0, 5000])  # hist(data,bins,range)
    plt.minorticks_on()
    plt.xlabel('spine area')
    plt.ylabel('Number of spines')

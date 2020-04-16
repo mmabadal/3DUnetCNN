@@ -40,10 +40,6 @@ def main():
 
     path_run = parsed_args.path_run   # get run folder
 
-    #path_pred = os.path.join(path_run, "prediction")
-
-    #path_pred = os.path.abspath(path_run + "/prediction")
-
     path_pred = os.path.abspath("prediction")
 
     run_validation_cases(validation_keys_file=config["validation_file"],
@@ -51,11 +47,11 @@ def main():
                          training_modalities=config["training_modalities"],
                          labels=config["labels"],
                          hdf5_file=config["data_file"],
-                         output_label_map=False,
+                         output_label_map=False,  # TRUE -> CLASSES, FALSE -> SIGMOID
                          output_dir=path_pred)
 
     '''the network outputs the nii stacks in a different resolution than the originals introduced, in order to make
-    them equal, these are loaded into python and saved again. '''
+        them equal, these are loaded into python and saved again. '''
 
     dir_pred = listdir(path_pred)
 
@@ -82,8 +78,9 @@ def main():
 
     # rename predicted files to match the original ones
 
+    dir_pred = (listdir(path_pred))
     path_original = "data/"  # get path of original data
-    dir_original = listdir(path_original)  # list of original cases
+    dir_original = (listdir(path_original))  # list of original cases
     for case_pred in dir_pred:  # for each predicted case
         name1, name2, number = case_pred.split("_")  # get number
         rename(path_pred + "/" + case_pred, path_pred + "/" + dir_original[int(number)])  # rename to match original case

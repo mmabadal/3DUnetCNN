@@ -38,7 +38,7 @@ def main():
 
     file = name_in + ".nii.gz"
 
-    path_pred = path_run #os.path.join(path_run, "prediction")
+    path_pred = os.path.join(path_run, "prediction")
 
     dir = listdir(path_pred)
 

@@ -5,15 +5,16 @@ from unet3d.data import write_data_to_file, open_data_file
 from unet3d.generator import get_training_and_validation_generators
 from unet3d.model import unet_model_3d
 from unet3d.training import load_old_model, train_model
+from natsort import natsorted
 
 
 config = dict()
 config["pool_size"] = (2, 2, 2)  # pool size for the max pooling operations
-config["image_shape"] = (64, 64, 16)  # This determines what shape the images will be cropped/resampled to.
-config["patch_shape"] = None #(32, 32, 8)  # switch to None to train on the whole image
+config["image_shape"] = (513, 385, 101)  # This determines what shape the images will be cropped/resampled to.
+config["patch_shape"] = (128, 128, 64)  # switch to None to train on the whole image
 config["labels"] = (255,)  # the label numbers on the input image
 config["n_labels"] = 1
-config["all_modalities"] = ["spine"]
+config["all_modalities"] = ["gray"]
 config["training_modalities"] = config["all_modalities"]  # change this if you want to only use some of the modalities
 config["nb_channels"] = len(config["training_modalities"])
 if "patch_shape" in config and config["patch_shape"] is not None:
@@ -27,10 +28,10 @@ config["batch_size"] = 1
 config["validation_batch_size"] = 1
 config["n_epochs"] = 300  # cutoff the training after this many epochs
 config["patience"] = 10  # learning rate will be reduced after this many epochs if the validation loss is not improving
-config["early_stop"] = 50  # training will be stopped after this many epochs without the validation loss improving
+config["early_stop"] = 20  # training will be stopped after this many epochs without the validation loss improving
 config["initial_learning_rate"] = 0.00003
 config["learning_rate_drop"] = 0.5  # factor by which the learning rate will be reduced
-config["validation_split"] = 0  # portion of the data that will be used for training
+config["validation_split"] = 0.8  # portion of the data that will be used for training
 config["flip"] = True  # augments the data by randomly flipping an axis during
 config["permute"] = False  # data shape must be a cube. Augments the data by permuting in various directions
 config["distort"] = None  # switch to None if you want no distortion
@@ -50,10 +51,10 @@ def fetch_training_data_files():
     training_data_files = list()
     for subject_dir in glob.glob(os.path.join(os.path.dirname(__file__), "data", "*")):
         subject_files = list()
-        for modality in config["training_modalities"] + ["truth"]:
+        for modality in config["training_modalities"] + ["gt"]:
             subject_files.append(os.path.join(subject_dir, modality + ".nii.gz"))
         training_data_files.append(tuple(subject_files))
-    return training_data_files
+    return natsorted(training_data_files)
 
 
 def main(overwrite=False):

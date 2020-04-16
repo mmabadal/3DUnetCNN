@@ -57,11 +57,11 @@ def main():
 
         for slice in dir_dendrite_case:
 
-
             indx_slice = dir_dendrite_case.index(slice)
 
             data_spine_slice = io.imread(os.path.join(path_spine, renamed_case_folder + "_spGT", dir_spines_case[indx_slice]))
             data_spine_slice = color.rgb2gray(data_spine_slice)
+
             pos_spine = np.where(data_spine_slice != [0])
 
             data_dendritic_slice = io.imread(os.path.join(path_dendrite, case_folder, slice))
@@ -72,7 +72,6 @@ def main():
 
             for pos in range(len(pos_spine[0])):
                 data_spine_slice[pos_spine[0][pos], pos_spine[1][pos]] = 255
-
 
             scipy.misc.imsave(path_out + "/" + renamed_case_folder + "/" + str(dir_spines_case[indx_slice]), data_spine_slice)
 

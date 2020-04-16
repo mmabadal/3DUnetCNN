@@ -34,7 +34,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_run', help='path to the run folder.')
     parser.add_argument('--s_min', default=50,  type=int, help='min spine size')
-    parser.add_argument('--s_max', default=45000, type=int,  help='max spine size')
+    parser.add_argument('--s_max', default=99999, type=int,  help='max spine size')
     parsed_args = parser.parse_args(sys.argv[1:])
 
     path_run = parsed_args.path_run   # get prediction folder

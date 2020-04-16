@@ -58,8 +58,8 @@ def main():
         for slice in dir_dendrite_case:
 
             indx_slice = dir_dendrite_case.index(slice)
-            data_spine_slice = io.imread(os.path.join(path_spine, renamed_case_folder + "_spGT", dir_spines_case[indx_slice]))
 
+            data_spine_slice = io.imread(os.path.join(path_spine, renamed_case_folder + "_spGT", dir_spines_case[indx_slice])
             data_spine_slice = color.rgb2gray(data_spine_slice)
 
             pos_spine = np.where(data_spine_slice != [0])

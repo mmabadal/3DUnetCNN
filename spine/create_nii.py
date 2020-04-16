@@ -8,6 +8,8 @@ import sys
 matplotlib.use('agg')
 from skimage import io
 from natsort import natsorted
+from scipy import ndimage
+import scipy
 
 '''
 script to create nii files for the data and GT
@@ -57,6 +59,11 @@ def main():
         for slice in dir_slices_or:
             # load original files
             spine_slice = io.imread(os.path.join(path_or, case_folder, slice))
+            spine_slice = np.flipud(spine_slice)
+            spine_slice = np.rot90(spine_slice)
+            spine_slice = np.rot90(spine_slice)
+            spine_slice = np.rot90(spine_slice)
+
 
             if first == 1:
                 spine = spine_slice
@@ -77,6 +84,11 @@ def main():
             
             # load original files
             truth_slice = io.imread(os.path.join(path_gt, case_folder + "", slice, ))  # case_folder, si tienen sufijo las carpetas de los casos, añadir aqui 
+            truth_slice = np.flipud(truth_slice)
+            truth_slice = np.rot90(truth_slice)
+            truth_slice = np.rot90(truth_slice)
+            truth_slice = np.rot90(truth_slice)
+
 
             if first == 1:
                 truth = truth_slice#[..., 0] # si el gt estan en rgb, desecomentar coger capa 0

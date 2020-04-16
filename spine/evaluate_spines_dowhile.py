@@ -26,7 +26,7 @@ outputs:
 
 execution example:
 
- - python3 evaluate_spines_nomean.py --path_run "results/spines/128x128x64_da_medium_300_wdl_sigmoid" --v_min 0 --coinc_thr 0.5 --print_opt 1 --v_min_sweep 300
+ - python3 evaluate_spines_nomean.py --path_run "results/spines/128x128x64_da_medium_300_wdl_sigmoid" --v_min 0 --v_max 99999 --coinc_thr 0.5 --print_opt 1 --v_min_sweep 300 --source "spden" --eval "iou"
 
 '''
 
@@ -39,11 +39,67 @@ def get_metrics_from_volumes(TP_v, FP_v, thr, n_gt):
     fp = len(FP_v_del)
     fn = n_gt - tp
 
-    sens = tp / (tp + fn)
-    prec = tp / (tp + fp)
-    f1 = (2*(sens*prec)/(sens+prec))
+    if tp == 0:
+        sens = 0
+        prec = 0
+        f1 = 0
+    else:
+        sens = tp / (tp + fn)
+        prec = tp / (tp + fp)
+        f1 = (2*(sens*prec)/(sens+prec))
+
 
     return sens, prec, f1
+
+
+def get_cmatrix(SCORES, thr):
+
+    n_gt = len(SCORES)
+    n_pred = len(SCORES[0])
+
+    eval_list = list(range(n_gt))
+    eval_aux = list()
+    pairs = np.full([2,n_gt], -1)
+    # lista/matrix de parejas
+
+    while eval_list:
+        for i in eval_list:
+            ok = False
+            gt_scores = SCORES[i]
+            max_score = max(gt_scores)
+            while ok == False:
+                if max_score > thr:
+                    max_index = gt_scores.index(max_score)
+                    if max_index not in pairs[0,:]:
+                        pairs[0,i] = max_index
+                        pairs[1,i] = max_score
+                        ok = True
+                    else:
+                        a = np.where(pairs[0,:] == max_index)[0][0]
+                        if pairs[1, a] < max_score:
+                            pairs[0, i] = max_index
+                            pairs[1, i] = max_score
+                            pairs[0, a] = -1
+                            pairs[1, a] = -1
+                            eval_aux.append(a)
+                            ok = True
+                        if pairs[1, a] > max_score:
+                            gt_scores[max_index] = 0
+                            max_score = max(gt_scores)
+                        else:
+                            ok = True
+                else:
+                    ok = True
+
+        eval_list = eval_aux
+        eval_aux = list()
+
+    used_list = list(pairs[0, np.where(pairs[0, :] >= 0)[0]])
+    tp = len(used_list)
+    fp = n_pred - tp
+    fn = n_gt - tp
+
+    return tp, fp, fn, used_list
 
 def main():
 
@@ -55,7 +111,7 @@ def main():
     parser.add_argument('--print_opt', default=0,  type=int, help='print optins, 0:no print, 1: print all, 2: print together, 3:print separated')
     parser.add_argument('--v_min_sweep', default=0,  type=int, help='v_min_seep options, 0:no sweep, x: sweep from 0 to x ')
     parser.add_argument('--source',  type=str, help='source training classes, options: spine or spden')
-    parser.add_argument('--eval', default="nomean",  type=str, help='eval options, nomean or iou')
+    parser.add_argument('--eval', default="iou",  type=str, help='eval options, nomean or iou')
 
     parsed_args = parser.parse_args(sys.argv[1:])
 
@@ -70,7 +126,7 @@ def main():
 
 
     path_pred = os.path.join(path_run, "prediction")
-    out = str(v_min) + '_'+ str(v_max) + '_' + str(coinc_thr) + '_' + str(v_min_sweep) + '_' + eval
+    out = str(v_min) + '_' + str(v_max) + '_' + str(coinc_thr) + '_' + str(v_min_sweep) + '_' + eval
     path_out = os.path.join(path_run, "results/", out)
     if not os.path.exists(path_out):
         os.makedirs(path_out)
@@ -83,6 +139,7 @@ def main():
     TP = list()
     SENS = list()
     PREC = list()
+    F1 = list()
     validation_cases = list()
     SENS_v_all = list()
     PREC_v_all = list()
@@ -93,6 +150,7 @@ def main():
     for idx, case_folder in enumerate(dir):  # for each case
 
         # lists to store volume of TP and FP pred spines
+        SCORES = list()
         TP_v = list()
         FP_v = list()
 
@@ -100,11 +158,6 @@ def main():
         SENS_v = list()
         PREC_v = list()
         F1_v = list()
-
-        # init
-        tp_case = 0
-        fn_case = 0
-        used_list = list()  # already detected spines
 
         path, val_case = os.path.split(case_folder)
 
@@ -193,50 +246,23 @@ def main():
 
             if eval == "nomean":
 
-                # delete % from positions of already detected spines
-                for ind in used_list:
-                    coincide_list_GT[ind] = 0
-                    coincide_list_Pred[ind] = 0
-
                 for i in range(len(coincide_list_GT)):
                     if coincide_list_GT[i] < coinc_thr or coincide_list_Pred[i] < coinc_thr:
                         coincide_list_GT[i] = 0
                         coincide_list_Pred[i] = 0
-
                 # get maximum mean score
                 coincide_list_mean = [(x+y)/2 for x, y in zip(coincide_list_GT, coincide_list_Pred)]  # scores mean
-
-                # if coincide_list_mean:
-                max_coinc = max(coincide_list_mean)  # max mean score
-                if max_coinc > coinc_thr:
-                    max_index = coincide_list_mean.index(max_coinc)  # max mean score index
-                    tp_case = tp_case + 1  # tp + 1
-                    used_list.append(max_index)  # spine detected
-                else:
-                    fn_case = fn_case + 1  # if not, fn + 1
+                SCORES.append(coincide_list_mean)
 
             if eval == "iou":
+                SCORES.append(IoU_list)
 
-                # delete % from positions of already detected spines
-                for ind in used_list:
-                    IoU_list[ind] = 0
-
-                # get maximum mean score
-                max_IoU = max(IoU_list)  # max mean score
-                max_index = IoU_list.index(max_IoU)  # max mean score index
-
-                # check if spine is detected
-                if max_IoU > coinc_thr:  # if max_coinc is > than coinc_thr
-                    tp_case = tp_case + 1  # tp + 1
-                    used_list.append(max_index)  # spine detected
-                else:
-                    fn_case = fn_case + 1  # if not, fn + 1
-
-        fp_case = num_labels_prediction - tp_case  # get fp as the difference between detected spines and tp
+        tp_case, fp_case, fn_case, used_list = get_cmatrix(SCORES, coinc_thr)
 
         # calculate evaluation metrics
         sens_case = tp_case / (tp_case + fn_case)
         prec_case = tp_case / (tp_case + fp_case)
+        f1_case = (2 * (sens_case * prec_case) / (sens_case + prec_case))
 
         # save case metrics
         FP.append(fp_case)
@@ -244,6 +270,7 @@ def main():
         TP.append(tp_case)
         SENS.append(sens_case)
         PREC.append(prec_case)
+        F1.append(f1_case)
         validation_cases.append(val_case)
 
         for i in range(num_labels_prediction):
@@ -269,8 +296,8 @@ def main():
 
 
     # save spine results on csv
-    header = ['FP', 'FN', 'TP', 'Sens.', 'Precision']
-    spine_csv = ({header[0]: FP, header[1]: FN, header[2]: TP, header[3]: SENS, header[4]: PREC})
+    header = ['FP', 'FN', 'TP', 'Sens.', 'Precision', 'F1']
+    spine_csv = ({header[0]: FP, header[1]: FN, header[2]: TP, header[3]: SENS, header[4]: PREC, header[5]: F1})
     df = pd.DataFrame.from_records(spine_csv, index=validation_cases)
     df.to_csv(path_out + "/spine_scores.ods")
 

@@ -26,6 +26,7 @@ execution example:
 
 def main():
 
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_data', help='path to the input case folders.')
     parser.add_argument('--path_out', help='path to export the output case folders.')
@@ -36,11 +37,12 @@ def main():
     path_out = parsed_args.path_out   # get path out
     z_stack = parsed_args.z_stack  # get target slices
 
+
     os.mkdir(path_out)
 
     dir = listdir(path_data)
 
-    black_slice = np.zeros((1024, 1024), dtype=np.uint8)  # aux black slice
+    black_slice = np.zeros((1024, 1024), dtype='>i2')  # aux black slice
 
     for case_folder in dir:  #for each case
 
@@ -50,6 +52,7 @@ def main():
         data_file = os.path.join(path_data, case_folder, "spine.nii.gz")
         data_image = nib.load(data_file)
         data = data_image.get_data()
+        #data = data[...,0]
 
         # stack black slice 'indx' times
         indx = data.shape[2]
@@ -59,7 +62,7 @@ def main():
         while indx != z_stack:
             data = np.dstack((data, black_slice))
             indx += 1
-
+        data = data.astype('>i2')
         # Save extended data
         data_file_out = os.path.join(path_out, case_folder, "spine.nii.gz")
         data = nib.Nifti1Image(data, affine=np.eye(4, 4))
