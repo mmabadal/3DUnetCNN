@@ -24,6 +24,7 @@ def patch_wise_prediction(model, data, overlap=0, batch_size=1, permute=False):
     batch = list()
     i = 0
     while i < len(indices):
+        print( "patch " + str(i) + "/"+ str(len(indices)))
         while len(batch) < batch_size:
             patch = get_patch_from_3d_data(data[0], patch_shape=patch_shape, patch_index=indices[i])
             batch.append(patch)
