@@ -25,15 +25,11 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_run', help='path to the run folder.')
-    parser.add_argument('--rescale', default=0, help='1 to rescale.')
     parser.add_argument('--name_in', help='working file name')
-    parser.add_argument('--class2exp', default=0, help='0 to extract all classes, 1 for only dendrite, 2 for only spine')
     parsed_args = parser.parse_args(sys.argv[1:])
 
     path_run = parsed_args.path_run  # get prediction folder
-    rescale = parsed_args.rescale  # get rescale option
     name_in = parsed_args.name_in  # get type
-    class2exp = int(parsed_args.class2exp)  # get rescale option
 
 
     file = name_in + ".nii.gz"
@@ -47,18 +43,11 @@ def main():
 
         # load nii file
         file_path = os.path.join(path_pred, case_folder, file)
-        prediction = nib.load(file_path)
+        prediction = nib.load("/home/miguel/Desktop/3DUnetCNN/spine/RUNS/test_5_128_64/prediction/Cas002/prediction.nii.gz")
         prediction = prediction.get_data()
 
-        if class2exp == 0:
-            pred = np.where(prediction != [0])  # get detected index
-            name_out = "all"
-        elif class2exp == 1:
-            pred = np.where(prediction == [150])  # get detected index
-            name_out = "dendrite"
-        elif class2exp == 2:
-            pred = np.where(prediction == [255])  # get detected index
-            name_out = "spine"
+        pred = np.where(prediction > [0.70])  # get detected index
+        name_out = "bone"
 
         # get detected coords
 
@@ -67,12 +56,9 @@ def main():
         z = pred[2]
         coords = np.zeros((x.shape[0], 3), dtype=int)  # auxiliary image
 
-        # rescale if indicated
-        if rescale == 1:
-            x = 92.803 + 0.0751562 * x
-            y = -51.543 + 0.0751562 * y
-            z = 50.927 + 0.279911 * z
-            coords = np.zeros((x.shape[0], 3))  # auxiliary image
+
+        z = 0.25 * z
+
 
         # append information
         for coord in range(x.shape[0]):

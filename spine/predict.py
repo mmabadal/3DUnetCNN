@@ -58,7 +58,7 @@ def main():
     for case_folder in dir_pred:
 
         # load predicted files
-        spine_file = os.path.join(path_pred, case_folder, "data_spine.nii.gz")
+        spine_file = os.path.join(path_pred, case_folder, "data_data.nii.gz")
         truth_file = os.path.join(path_pred, case_folder, "truth.nii.gz")
         prediction_file = os.path.join(path_pred, case_folder, "prediction.nii.gz")
         spine_image = nib.load(spine_file)
