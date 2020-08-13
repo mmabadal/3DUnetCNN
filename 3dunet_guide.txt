@@ -1,0 +1,162 @@
+
+---- set up PC ----
+
+OS: ubuntu 16.04  * during installation check both third party ... external ...
+Graphic card: nvidia 1080
+
+---- drivers ----
+
+drivers: 384.130  * from settings->additional drivers -> 384.130
+		  * from $ sudo add-apt-repository ppa:graphics-drivers/ppa
+			 $ sudo apt-get update
+			 $ sudo apt-get install nvidia-384 nvidia-modprobe
+
+
+---- basic tools ---- https://www.youtube.com/watch?v=rILtTjrecQc
+
+$ sudo apt-get update
+$ sudo apt-get --assume-yes upgrade
+$ sudo apt-get --assume-yes install tmux build-essential gcc g++ make binutils
+$ sudo apt-get --assume-yes install software-properties-common
+
+---- CUDA ---- https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubuntu-79306e4ac04e
+
+CUDA: 8.0 GA2 RUNFILE * from https://developer.nvidia.com/cuda-toolkit-archive
+
+$ chmod +x cuda_8.0.61_375.26_linux.run
+$ ./cuda_8.0.61_375.26_linux.run --extract=$HOME
+
+You should have unpacked three components: 
+1 - NVIDIA-Linux-x86_64-384.81.run (NVIDIA driver that we ignore)
+2 - cuda-linux.9.0.176-22781540.run (CUDA 8.0 installer)
+3 - cuda-samples.9.0.176-22781540-linux.run (CUDA 8.0 Samples).
+
+$ sudo ./cuda-linux64-rel-8.0.61-21551265.run
+
+You now have to accept the license by scrolling down to the bottom and enter “accept”. Next accept the defaults.
+To verify our CUDA installation, install the sample tests by
+
+$ sudo ./cuda-samples-linux-8.0.61-21551265.run
+
+After the installation finishes, configure the runtime library.
+
+$ sudo bash -c "echo /usr/local/cuda/lib64/ > /etc/ld.so.conf.d/cuda.conf"
+$ sudo ldconfig
+
+include nvcc in $PATH
+
+$ sudo nano /etc/environment
+add :/usr/local/cuda/bin (including the ":") at the end of the PATH="/blah:/blah/blah" string (inside the quotes)
+
+$ reboot
+
+Lets test
+
+$ cd /usr/local/cuda-8.0/samples
+$ sudo make
+$ cd /usr/local/cuda/samples/bin/x86_64/linux/release
+$ ./deviceQuery
+Result = PASS
+
+
+
+---- CUDNN ---- https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubuntu-79306e4ac04e
+
+CUDNN: 6.0 from CUDA 8 * from https://developer.nvidia.com/rdp/cudnn-archive (mikimartin11@gmail, L _ _ _ _ _ _ _ _ _ _ !)
+
+Download all 3 .deb files: the runtime library, the developer library, and the code samples library for Ubuntu 16.04
+
+$ sudo dpkg -i libcudnn6_6.0.21-1+cuda8.0_amd64.deb (the runtime library)
+$ sudo dpkg -i libcudnn6-dev_6.0.21-1+cuda8.0_amd64.deb (the developer library)
+$ sudo dpkg -i libcudnn6-doc_6.0.21-1+cuda8.0_amd64.deb (the code samples)
+
+test CUDNN
+
+- copy the code samples somewhere you have write access: 
+$ cp -r /usr/src/cudnn_samples_v6/ /home/miguel/Desktop/
+$ cd /home/miguel/Desktop/cudnn_samples_v6/mnistCUDNN
+$ make clean && make
+$ ./mnistCUDNN
+Test passed!
+
+configure the CUDA and cuDNN library paths, put the following line in the end or your .bashrc file
+
+# configure the CUDA and cuDNN library paths
+$ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda/extras/CUPTI/lib64"
+
+
+---- ANACONDA ---- 
+
+download anaconda (end of page): https://www.anaconda.com/products/individual#linux
+
+install conda dependencies and anaconda (https://docs.anaconda.com/anaconda/install/linux/)
+
+$ sudo apt-get install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+$ bash ~/Downloads/Anaconda3-2020.02-Linux-x86_64.sh    (yes - default - yes)
+
+you can deactivate the auto base environment on new shell
+$ conda config --set auto_activate_base false
+
+$ create conda env
+
+$ conda create --name 3dunet python=3.6 
+
+$ conda activate 3dunet
+
+---- TENSORFLOW ----
+
+error when installing tensorflow 1.4 from conda. Installed by pip
+$ pip install tensorflow-gpu==1.4
+
+---- 3DUNET SETUP ----
+
+
+$ git clone from https://github.com/srv/3DUnetCNN
+
+$ pip install theano==1.0.1 (in tensorflow, not needed)
+$ pip install keras==2.0.9
+$ pip install nilearn==0.4.0
+$ pip install nibabel==2.2.1
+$ pip install nipype==1.0.0
+$ pip install simpleitk
+$ pip install sklearn
+$ pip install h5py
+$ pip install scikit-learn==0.21.1
+$ conda install scikit-image=0.14.2
+$ conda install numpy=1.15
+$ conda install pytables=3.4.2
+$ conda install mkl
+$ conda install mkl-service
+$ conda install mkl=2017
+
+- add to bashrc: MKL_THREADING_LAYER=GNU
+
+- set Keras backend
+
+on /home create folder /.keras and file ./keras/keras.json:
+
+
+{
+    "floatx": "float32",
+    "epsilon": 1e-07,
+    "backend": "tensorflow",
+    "image_data_format": "channels_last"
+}
+
+
+on the first execution, this folder and ile will be created automatically with backend tensorflow if it does not exist
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
