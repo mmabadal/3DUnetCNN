@@ -19,3 +19,4 @@ test_dir
 spine/results
 spine/data
 data/
+spine/RUNS/*
